@@ -1,0 +1,724 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Xray Configuration Schema",
+  "type": "object",
+  "required": [],
+  "properties": {
+    "log": {
+      "type": "object",
+      "description": "Log configurations, controlling how Xray emits logs",
+      "properties": {
+        "access": {
+          "type": "string",
+          "description": "File path for access log. Empty value outputs to stdout. Use 'none' to disable"
+        },
+        "error": {
+          "type": "string",
+          "description": "File path for error log. Empty value outputs to stdout. Use 'none' to disable"
+        },
+        "loglevel": {
+          "type": "string",
+          "enum": ["debug", "info", "warning", "error", "none"],
+          "default": "warning",
+          "description": "Log level for error logs"
+        },
+        "dnsLog": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether to log DNS queries"
+        },
+        "maskAddress": {
+          "type": "string",
+          "enum": ["", "quarter", "half", "full"],
+          "description": "IP address masking level"
+        }
+      }
+    },
+    "api": {
+      "type": "object",
+      "description": "API interface configuration",
+      "properties": {
+        "tag": {
+          "type": "string",
+          "description": "Outbound proxy identifier"
+        },
+        "listen": {
+          "type": "string",
+          "description": "API service listen address and port"
+        },
+        "services": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["HandlerService", "LoggerService", "StatsService", "ReflectionService", "RoutingService"]
+          },
+          "description": "List of enabled API services"
+        }
+      }
+    },
+    "dns": {
+      "type": "object",
+      "description": "DNS server configuration",
+      "properties": {
+        "hosts": {
+          "type": "object",
+          "additionalProperties": {
+            "oneOf": [
+              { "type": "string" },
+              {
+                "type": "array",
+                "items": { "type": "string" }
+              }
+            ]
+          },
+          "description": "Static DNS records"
+        },
+        "servers": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              { "type": "string" },
+              {
+                "type": "object",
+                "properties": {
+                  "address": { "type": "string" },
+                  "port": { "type": "integer" },
+                  "domains": {
+                    "type": "array",
+                    "items": { "type": "string" }
+                  },
+                  "expectIPs": {
+                    "type": "array",
+                    "items": { "type": "string" }
+                  },
+                  "skipFallback": { "type": "boolean" },
+                  "clientIP": { "type": "string" }
+                }
+              }
+            ]
+          }
+        },
+        "clientIp": { "type": "string" },
+        "queryStrategy": {
+          "type": "string",
+          "enum": ["UseIP", "UseIPv4", "UseIPv6"]
+        },
+        "disableCache": { "type": "boolean" },
+        "disableFallback": { "type": "boolean" },
+        "disableFallbackIfMatch": { "type": "boolean" },
+        "tag": { "type": "string" }
+      }
+    },
+    "routing": {
+      "type": "object",
+      "description": "Routing configuration",
+      "properties": {
+        "domainStrategy": {
+          "type": "string",
+          "enum": ["AsIs", "IPIfNonMatch", "IPOnDemand"]
+        },
+        "domainMatcher": {
+          "type": "string",
+          "enum": ["hybrid", "linear"]
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "type": { "type": "string" },
+              "domain": {
+                "type": "array",
+                "items": { "type": "string" }
+              },
+              "ip": {
+                "type": "array",
+                "items": { "type": "string" }
+              },
+              "port": {
+                "oneOf": [
+                  { "type": "string" },
+                  { "type": "integer" }
+                ]
+              },
+              "sourcePort": {
+                "oneOf": [
+                  { "type": "string" },
+                  { "type": "integer" }
+                ]
+              },
+              "network": { "type": "string" },
+              "source": {
+                "type": "array",
+                "items": { "type": "string" }
+              },
+              "user": {
+                "type": "array",
+                "items": { "type": "string" }
+              },
+              "inboundTag": {
+                "type": "array",
+                "items": { "type": "string" }
+              },
+              "protocol": {
+                "type": "array",
+                "items": { "type": "string" }
+              },
+              "attrs": { "type": "object" },
+              "outboundTag": { "type": "string" },
+              "balancerTag": { "type": "string" }
+            }
+          }
+        },
+        "balancers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "tag": { "type": "string" },
+              "selector": {
+                "type": "array",
+                "items": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "policy": {
+      "type": "object",
+      "description": "Local policy configuration",
+      "properties": {
+        "levels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "handshake": { "type": "integer" },
+              "connIdle": { "type": "integer" },
+              "uplinkOnly": { "type": "integer" },
+              "downlinkOnly": { "type": "integer" },
+              "statsUserUplink": { "type": "boolean" },
+              "statsUserDownlink": { "type": "boolean" },
+              "statsUserOnline": { "type": "boolean" },
+              "bufferSize": { "type": "integer" }
+            }
+          }
+        },
+        "system": {
+          "type": "object",
+          "properties": {
+            "statsInboundUplink": { "type": "boolean" },
+            "statsInboundDownlink": { "type": "boolean" },
+            "statsOutboundUplink": { "type": "boolean" },
+            "statsOutboundDownlink": { "type": "boolean" }
+          }
+        }
+      }
+    },
+    "inbounds": {
+      "type": "array",
+      "description": "Inbound connections configuration",
+      "items": {
+        "type": "object",
+        "required": ["port", "protocol"],
+        "properties": {
+          "listen": { "type": "string" },
+          "port": {
+            "oneOf": [
+              { "type": "integer" },
+              { "type": "string" }
+            ]
+          },
+          "protocol": {
+            "type": "string",
+            "enum": [
+              "dokodemo-door",
+              "http",
+              "shadowsocks",
+              "socks",
+              "trojan",
+              "vless",
+              "vmess"
+            ]
+          },
+          "settings": {
+            "type": "object",
+            "oneOf": [
+              {
+                "title": "Dokodemo-door Settings",
+                "properties": {
+                  "address": { "type": "string" },
+                  "port": { "type": "integer" },
+                  "network": {
+                    "type": "string",
+                    "enum": ["tcp", "udp", "tcp,udp"]
+                  },
+                  "timeout": { "type": "integer" },
+                  "followRedirect": { "type": "boolean" },
+                  "userLevel": { "type": "integer" }
+                }
+              },
+              {
+                "title": "HTTP Settings",
+                "properties": {
+                  "timeout": { "type": "integer" },
+                  "accounts": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "user": { "type": "string" },
+                        "pass": { "type": "string" },
+                        "level": { "type": "integer" }
+                      }
+                    }
+                  },
+                  "allowTransparent": { "type": "boolean" },
+                  "userLevel": { "type": "integer" }
+                }
+              },
+              {
+                "title": "Socks Settings",
+                "properties": {
+                  "auth": {
+                    "type": "string",
+                    "enum": ["noauth", "password"]
+                  },
+                  "accounts": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "user": { "type": "string" },
+                        "pass": { "type": "string" },
+                        "level": { "type": "integer" }
+                      }
+                    }
+                  },
+                  "udp": { "type": "boolean" },
+                  "ip": { "type": "string" },
+                  "userLevel": { "type": "integer" }
+                }
+              },
+              {
+                "title": "VMess Settings",
+                "properties": {
+                  "clients": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": { "type": "string" },
+                        "level": { "type": "integer" },
+                        "alterId": { "type": "integer" },
+                        "email": { "type": "string" },
+                        "security": {
+                          "type": "string",
+                          "enum": ["aes-128-gcm", "chacha20-poly1305", "auto", "none", "zero"]
+                        }
+                      }
+                    }
+                  },
+                  "default": {
+                    "type": "object",
+                    "properties": {
+                      "level": { "type": "integer" },
+                      "alterId": { "type": "integer" }
+                    }
+                  },
+                  "detour": {
+                    "type": "object",
+                    "properties": {
+                      "to": { "type": "string" }
+                    }
+                  },
+                  "disableInsecure": { "type": "boolean" }
+                }
+              }
+            ]
+          },
+          "streamSettings": {
+            "type": "object",
+            "properties": {
+              "network": {
+                "type": "string",
+                "enum": ["tcp", "kcp", "ws", "http", "quic", "grpc"]
+              },
+              "security": {
+                "type": "string",
+                "enum": ["none", "tls"]
+              },
+              "tlsSettings": {
+                "type": "object",
+                "properties": {
+                  "serverName": { "type": "string" },
+                  "certificates": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "certificateFile": { "type": "string" },
+                        "keyFile": { "type": "string" },
+                        "ocspStapling": { "type": "integer" },
+                        "usage": {
+                          "type": "string",
+                          "enum": ["encipherment", "verify", "issue"]
+                        }
+                      }
+                    }
+                  },
+                  "alpn": {
+                    "type": "array",
+                    "items": { "type": "string" }
+                  }
+                }
+              },
+              "tcpSettings": {
+                "type": "object",
+                "properties": {
+                  "header": {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": ["none", "http"]
+                      },
+                      "request": {
+                        "type": "object",
+                        "properties": {
+                          "version": { "type": "string" },
+                          "method": { "type": "string" },
+                          "path": {
+                            "type": "array",
+                            "items": { "type": "string" }
+                          },
+                          "headers": { "type": "object" }
+                        }
+                      },
+                      "response": {
+                        "type": "object",
+                        "properties": {
+                          "version": { "type": "string" },
+                          "status": { "type": "string" },
+                          "reason": { "type": "string" },
+                          "headers": { "type": "object" }
+                        }
+                      }
+                    }
+                  },
+                  "acceptProxyProtocol": { "type": "boolean" }
+                }
+              }
+            }
+          },
+          "tag": { "type": "string" },
+          "sniffing": {
+            "type": "object",
+            "properties": {
+              "enabled": { "type": "boolean" },
+              "destOverride": {
+                "type": "array",
+                "items": { "type": "string" }
+              },
+              "metadataOnly": { "type": "boolean" },
+              "domainsExcluded": {
+                "type": "array",
+                "items": { "type": "string" }
+              },
+              "routeOnly": { "type": "boolean" }
+            }
+          },
+          "allocate": {
+            "type": "object",
+            "properties": {
+              "strategy": {
+                "type": "string",
+                "enum": ["always", "random"]
+              },
+              "refresh": { "type": "integer" },
+              "concurrency": { "type": "integer" }
+            }
+          }
+        }
+      }
+    },
+    "outbounds": {
+      "type": "array",
+      "description": "Outbound connections configuration",
+      "items": {
+        "type": "object",
+        "required": ["protocol"],
+        "properties": {
+          "sendThrough": { "type": "string" },
+          "protocol": { 
+            "type": "string",
+            "enum": [
+              "blackhole",
+              "dns",
+              "freedom",
+              "http",
+              "shadowsocks",
+              "socks",
+              "trojan",
+              "vless",
+              "vmess",
+              "wireguard"
+            ]
+          },
+          "settings": {
+            "type": "object",
+            "oneOf": [
+              {
+                "title": "Freedom Settings",
+                "properties": {
+                  "domainStrategy": {
+                    "type": "string",
+                    "enum": ["AsIs", "UseIP", "UseIPv4", "UseIPv6"]
+                  },
+                  "redirect": { "type": "string" },
+                  "userLevel": { "type": "integer" }
+                }
+              },
+              {
+                "title": "Blackhole Settings",
+                "properties": {
+                  "response": {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": ["none", "http"]
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "title": "VMess Settings",
+                "properties": {
+                  "vnext": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "address": { "type": "string" },
+                        "port": { "type": "integer" },
+                        "users": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": { "type": "string" },
+                              "alterId": { "type": "integer" },
+                              "security": {
+                                "type": "string",
+                                "enum": ["aes-128-gcm", "chacha20-poly1305", "auto", "none", "zero"]
+                              },
+                              "level": { "type": "integer" }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "tag": { "type": "string" },
+          "streamSettings": { "type": "object" },
+          "proxySettings": {
+            "type": "object",
+            "properties": {
+              "tag": { "type": "string" }
+            }
+          },
+          "mux": {
+            "type": "object",
+            "properties": {
+              "enabled": { "type": "boolean" },
+              "concurrency": { "type": "integer" },
+              "xudpConcurrency": { "type": "integer" },
+              "xudpProxyUDP443": {
+                "type": "string",
+                "enum": ["reject", "allow", "skip"]
+              }
+            }
+          }
+        }
+      }
+    },
+    "transport": {
+      "type": "object",
+      "description": "Transport protocol settings",
+      "properties": {
+        "tcpSettings": {
+          "type": "object",
+          "properties": {
+            "acceptProxyProtocol": { "type": "boolean" },
+            "header": {
+              "type": "object",
+              "properties": {
+                "type": { 
+                  "type": "string",
+                  "enum": ["none", "http"] 
+                }
+              }
+            }
+          }
+        },
+        "kcpSettings": {
+          "type": "object",
+          "properties": {
+            "mtu": { "type": "integer" },
+            "tti": { "type": "integer" },
+            "uplinkCapacity": { "type": "integer" },
+            "downlinkCapacity": { "type": "integer" },
+            "congestion": { "type": "boolean" },
+            "readBufferSize": { "type": "integer" },
+            "writeBufferSize": { "type": "integer" },
+            "header": {
+              "type": "object",
+              "properties": {
+                "type": { 
+                  "type": "string",
+                  "enum": ["none", "srtp", "utp", "wechat-video", "dtls", "wireguard"] 
+                }
+              }
+            },
+            "seed": { "type": "string" }
+          }
+        },
+        "wsSettings": {
+          "type": "object",
+          "properties": {
+            "acceptProxyProtocol": { "type": "boolean" },
+            "path": { "type": "string" },
+            "headers": { 
+              "type": "object",
+              "additionalProperties": { "type": "string" }
+            }
+          }
+        },
+        "httpSettings": {
+          "type": "object",
+          "properties": {
+            "host": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "path": { "type": "string" }
+          }
+        },
+        "quicSettings": {
+          "type": "object",
+          "properties": {
+            "security": {
+              "type": "string",
+              "enum": ["none", "aes-128-gcm", "chacha20-poly1305"]
+            },
+            "key": { "type": "string" },
+            "header": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": ["none", "srtp", "utp", "wechat-video", "dtls", "wireguard"]
+                }
+              }
+            }
+          }
+        },
+        "grpcSettings": {
+          "type": "object",
+          "properties": {
+            "serviceName": { "type": "string" },
+            "multiMode": { "type": "boolean" },
+            "idle_timeout": { "type": "integer" },
+            "health_check_timeout": { "type": "integer" },
+            "permit_without_stream": { "type": "boolean" },
+            "initial_windows_size": { "type": "integer" }
+          }
+        }
+      }
+    },
+    "stats": {
+      "type": "object",
+      "description": "Statistics configuration",
+      "properties": {
+        "enabled": { "type": "boolean" }
+      }
+    },
+    "reverse": {
+      "type": "object",
+      "description": "Reverse proxy configuration",
+      "properties": {
+        "bridges": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "tag": { "type": "string" },
+              "domain": { "type": "string" }
+            }
+          }
+        },
+        "portals": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "tag": { "type": "string" },
+              "domain": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "fakedns": {
+      "type": "object",
+      "description": "FakeDNS configuration",
+      "properties": {
+        "ipPool": { "type": "string" },
+        "poolSize": { "type": "integer" },
+        "timeout": { "type": "integer" }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "description": "Metrics export configuration",
+      "properties": {
+        "tag": { "type": "string" },
+        "endpoint": { "type": "string" },
+        "interval": { "type": "integer" }
+      }
+    },
+    "observatory": {
+      "type": "object",
+      "description": "Background connection observation configuration",
+      "properties": {
+        "subjectSelector": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "probeInterval": { "type": "string" },
+        "probeUrl": { "type": "string" },
+        "enableConcurrency": { "type": "boolean" }
+      }
+    },
+    "burstObservatory": {
+      "type": "object",
+      "description": "Concurrent connection observation configuration",
+      "properties": {
+        "subjectSelector": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "burstInterval": { "type": "string" },
+        "burstUrl": { "type": "string" },
+        "concurrency": { "type": "integer" }
+      }
+    }
+  }
+}
